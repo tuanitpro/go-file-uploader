@@ -26,7 +26,7 @@ import (
 )
 
 func main() {
-	log.Println("Server started...")
+	log.Println("Server started... PORT:8080")
 	setupRouters()
 }
 
@@ -38,10 +38,13 @@ type ResponseObject struct {
 
 func setupRouters() {
 	handler := http.NewServeMux()
+	handler.HandleFunc("/", HelloServer)
 	handler.HandleFunc("/api/v1/fileupload", uploadFiles)
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }
-
+func HelloServer(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
+}
 func uploadFiles(w http.ResponseWriter, r *http.Request) {
 	header := w.Header()
 	header.Add("Access-Control-Allow-Origin", "*")
