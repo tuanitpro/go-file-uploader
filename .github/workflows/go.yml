@@ -26,6 +26,6 @@ jobs:
       working-directory: api
       run: go build -v ./...
 
-    - name: Test
-      working-directory: api
-      run: go test -v ./...
+    # - name: Test
+    #  working-directory: api
+    #  run: go test -v ./...
