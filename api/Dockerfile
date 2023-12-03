@@ -11,8 +11,8 @@ WORKDIR /bin
 EXPOSE 5090
 COPY .env .
 COPY --from=build /app/program .
-VOLUME var/uploads
-
-USER nonroot:nonroot
+VOLUME /tmp/uploads
+# USER nonroot:nonroot
+USER root:root
 
 ENTRYPOINT ["/bin/program"]
