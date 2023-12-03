@@ -23,10 +23,16 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	log.Println("Server started... PORT:8080")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	log.Println("Server started... PORT:5090")
 	setupRouters()
 }
 
@@ -40,10 +46,10 @@ func setupRouters() {
 	handler := http.NewServeMux()
 	handler.HandleFunc("/", HelloServer)
 	handler.HandleFunc("/api/v1/fileupload", uploadFiles)
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Fatal(http.ListenAndServe(":5090", handler))
 }
 func HelloServer(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
+    fmt.Fprintf(w, "Hello, Go %s!", r.URL.Path[1:])
 }
 func uploadFiles(w http.ResponseWriter, r *http.Request) {
 	header := w.Header()
@@ -68,8 +74,8 @@ func uploadFiles(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseMultipartForm(10 << 20)
 
-	formdata := r.MultipartForm
-	files := formdata.File["myFile"]
+	formData := r.MultipartForm
+	files := formData.File["myFile"]
 
 	var results []ResponseObject
 
@@ -149,14 +155,18 @@ func writeAnyFile(w http.ResponseWriter, folderPath string, file multipart.File,
 }
 
 func createAndGetFolderPathToUpload(folderType string) string {
+	baseDir := os.Getenv("BASE_DIR")
+	if "" == baseDir {
+		baseDir = "uploads"
+	}
 	currentYear := time.Now().Year()
-	curentMonth := time.Now().Month()
-	intMonth := int(curentMonth)
+	currentMonth := time.Now().Month()
+	intMonth := int(currentMonth)
 	stringCurrentMonth := strconv.Itoa(intMonth)
 	if intMonth < 10 {
 		stringCurrentMonth = "0" + strconv.Itoa(intMonth)
 	}
-	path := []string{"C:\\web\\files\\", folderType, "\\", strconv.Itoa(currentYear), "\\", stringCurrentMonth, "\\"}
+	path := []string{baseDir, "/", folderType, "/", strconv.Itoa(currentYear), "/", stringCurrentMonth, "/"}
 	folderPath := strings.Join(path, "")
 	error := os.MkdirAll(folderPath, os.ModePerm)
 	if error != nil {

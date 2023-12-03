@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  # docker-compose build bee_go_uploader
+  bee_go_uploader:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: tuanitpro/bee_go_uploader
+    container_name: bee_go_uploader
+    ports:
+    - "5090:5090"
+    
