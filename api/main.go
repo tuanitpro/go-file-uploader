@@ -31,8 +31,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
-	log.Println("Server started... PORT:5090")
+	baseDir := os.Getenv("BASE_DIR")
+	if "" == baseDir {
+		baseDir = "uploads"
+	}
+	log.Println("Server started... PORT:5090. BASE_DIR: " + baseDir)
 	setupRouters()
 }
 
