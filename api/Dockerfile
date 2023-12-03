@@ -12,7 +12,6 @@ EXPOSE 5090
 COPY .env .
 COPY --from=build /app/program .
 VOLUME /tmp/uploads
-# USER nonroot:nonroot
-USER root:root
+USER nonroot:nonroot
 
 ENTRYPOINT ["/bin/program"]
