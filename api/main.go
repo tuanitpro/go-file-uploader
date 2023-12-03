@@ -37,9 +37,9 @@ func main() {
 }
 
 type ResponseObject struct {
-	Code    int
-	Message string
-	FileURL string
+	Code    int `json:"code"`
+	Message string `json:"message"`
+	FileURL string `json:"fileUrl"`
 }
 
 func setupRouters() {
