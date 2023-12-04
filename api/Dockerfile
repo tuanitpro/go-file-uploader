@@ -1,17 +1,18 @@
-FROM golang:1.21 AS build
+FROM golang:1.21-alpine AS build
 WORKDIR /app
 
 COPY . .
-
-RUN CGO_ENABLED=0 GOOS=linux go build -v -o program
+RUN go mod download && go mod verify
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o main
 
 # Build runtime image
-FROM gcr.io/distroless/base-debian11
+FROM gcr.io/distroless/static-debian12
 WORKDIR /bin
-EXPOSE 5090
+
 COPY .env .
-COPY --from=build /app/program .
+COPY --from=build /app/main .
 VOLUME /tmp/uploads
 USER nonroot:nonroot
 
-ENTRYPOINT ["/bin/program"]
+ENTRYPOINT ["main"]
+EXPOSE 5090
