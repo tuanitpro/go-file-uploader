@@ -45,33 +45,67 @@ type ResponseObject struct {
 	FileURL string `json:"fileUrl"`
 }
 
+type AuthenticationResponseObject struct {
+	Code    int `json:"code"`
+	Message string `json:"message"`
+}
+
 func setupRouters() {
 	handler := http.NewServeMux()
 	handler.HandleFunc("/", HelloServer)
-	handler.HandleFunc("/api/v1/fileupload", uploadFiles)
+	handler.HandleFunc("/api/v1/fileupload", UploadFiles)
 	log.Fatal(http.ListenAndServe(":5090", handler))
 }
+
 func HelloServer(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "Hello, Go %s!", r.URL.Path[1:])
 }
-func uploadFiles(w http.ResponseWriter, r *http.Request) {
+
+func GetAuthorization(r *http.Request) string {
+	bearer := r.Header.Get("Authorization")
+	if len(bearer) > 7 && strings.ToUpper(bearer[0:6]) == "BEARER" {
+		return bearer[7:]
+	}
+	return ""
+}
+
+func VerifyAccessToken(accessToken string) AuthenticationResponseObject {
+	if accessToken == "" {
+		errorResponse := AuthenticationResponseObject {
+			Code:    http.StatusUnauthorized,
+			Message: "Authentication header not present or malformed",
+		}
+		return errorResponse
+	}
+	errorResponse := AuthenticationResponseObject {
+		Code: http.StatusOK,
+	}
+	return errorResponse
+}
+
+func UploadFiles(w http.ResponseWriter, r *http.Request) {
 	header := w.Header()
 	header.Add("Access-Control-Allow-Origin", "*")
 	header.Add("Access-Control-Allow-Methods", "DELETE, POST, GET, OPTIONS")
 	header.Add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
 	header.Set("Content-Type", "application/json")
+	
 	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnsupportedMediaType)
 		errorResponse := ResponseObject{
-			Code:    http.StatusBadRequest,
+			Code:    http.StatusUnsupportedMediaType,
 			Message: "Accept method POST only",
 		}
-		var jsonData []byte
-		jsonData, err := json.Marshal(errorResponse)
-		if err != nil {
-			log.Println(err)
-		}
-		fmt.Fprintf(w, string(jsonData))
+		json.NewEncoder(w).Encode(errorResponse)
+		return
+	}
+
+	accessToken := GetAuthorization(r)
+	verifyTokenResult := VerifyAccessToken(accessToken)
+	if verifyTokenResult.Code == http.StatusUnauthorized {
+		log.Println(verifyTokenResult)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(verifyTokenResult)
 		return
 	}
 
@@ -113,12 +147,8 @@ func uploadFiles(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var jsonData []byte
-	jsonData, err := json.Marshal(results)
-	if err != nil {
-		log.Println(err)
-	}
-	fmt.Fprintf(w, string(jsonData))
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(results)
 }
 
 func writeFileImage(w http.ResponseWriter, file multipart.File, handler *multipart.FileHeader) ResponseObject {

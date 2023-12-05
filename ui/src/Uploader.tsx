@@ -56,12 +56,22 @@ function Uploader() {
         for (let i = 0; i < acceptedFiles.length; i++) {
           data.append("myFile", acceptedFiles[i]);
         }
-
+        const url = import.meta.env.VITE_API_ENDPOINT + "/api/v1/fileupload";
         axios
-          .post(import.meta.env.VITE_API_ENDPOINT + "/api/v1/fileupload", data)
+          .post(url, data, {
+            validateStatus: function (status) {
+              return status < 300;
+            }
+          })
           .then((response) => {
-            console.log(response.data);
-            toast.success("🦄 File uploaded successfully");
+            toast.success(`🦄 ${response.data[0]?.message}`);
+          })
+          .catch((error) => {
+            if (error?.response?.data) {
+              toast.error(error?.response?.data?.message);
+            } else {
+              toast.error("🦄 File upload error");
+            }
           });
       },
     });
